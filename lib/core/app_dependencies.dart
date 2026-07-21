@@ -6,13 +6,13 @@ import '../services/points_service.dart';
 import '../services/strava/http_strava_api_client.dart';
 import '../services/strava/in_memory_strava_token_store.dart';
 import '../services/strava/strava_auth_service.dart';
+import '../services/strava/strava_connection_controller.dart';
+import '../services/strava/strava_deep_link_service.dart';
+import '../services/strava/strava_oauth_launcher.dart';
 import '../services/strava/strava_repository.dart';
 import '../services/strava/strava_sync_controller.dart';
 import '../services/strava/strava_sync_service.dart';
 import '../services/validation_service.dart';
-import '../services/strava/strava_connection_controller.dart';
-import '../services/strava/strava_deep_link_service.dart';
-import '../services/strava/strava_oauth_launcher.dart';
 
 class AppDependencies {
   AppDependencies._();
@@ -68,6 +68,12 @@ class AppDependencies {
 
     stravaTokenStore = InMemoryStravaTokenStore();
 
+    // Debe crearse antes del StravaConnectionController.
+    stravaAuthService = StravaAuthService(
+      repository: stravaRepository,
+      tokenStore: stravaTokenStore,
+    );
+
     stravaConnectionController = StravaConnectionController(
       authService: stravaAuthService,
     );
@@ -76,11 +82,6 @@ class AppDependencies {
 
     stravaDeepLinkService = StravaDeepLinkService(
       connectionController: stravaConnectionController,
-    );
-
-    stravaAuthService = StravaAuthService(
-      repository: stravaRepository,
-      tokenStore: stravaTokenStore,
     );
 
     validationService = ValidationService();
@@ -105,6 +106,7 @@ class AppDependencies {
     );
 
     stravaSyncController = StravaSyncController(syncService: stravaSyncService);
+
     stravaConnectionController.initialize();
     stravaDeepLinkService.initialize();
 
@@ -119,8 +121,8 @@ class AppDependencies {
     await stravaDeepLinkService.dispose();
 
     stravaSyncController.dispose();
-    stravaApiClient.close();
     stravaConnectionController.dispose();
+    stravaApiClient.close();
 
     _initialized = false;
   }
