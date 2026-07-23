@@ -2,6 +2,7 @@ import '../repositories/in_memory_activity_repository.dart';
 import '../repositories/in_memory_point_transaction_repository.dart';
 import '../services/activity_processing_service.dart';
 import '../services/activity_service.dart';
+import '../services/dashboard_service.dart';
 import '../services/points_service.dart';
 import '../services/strava/http_strava_api_client.dart';
 import '../services/strava/in_memory_strava_token_store.dart';
@@ -38,6 +39,8 @@ class AppDependencies {
   late final ActivityService activityService;
 
   late final ActivityProcessingService activityProcessingService;
+
+  late final DashboardService dashboardService;
 
   late final StravaSyncService stravaSyncService;
 
@@ -97,6 +100,11 @@ class AppDependencies {
       activityRepository: activityRepository,
       pointTransactionRepository: pointTransactionRepository,
       activityService: activityService,
+    );
+
+    dashboardService = DashboardService(
+      activityRepository: activityRepository,
+      pointTransactionRepository: pointTransactionRepository,
     );
 
     stravaSyncService = StravaSyncService(
