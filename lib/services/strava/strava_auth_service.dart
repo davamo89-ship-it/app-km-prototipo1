@@ -88,24 +88,34 @@ class StravaAuthService {
 
     _pendingState = null;
 
-    final result = await _repository.exchangeCode(
-      authorizationCode: authorizationCode,
-    );
+    final grantedScopes = _parseCallbackScopes(
+  callbackUri.queryParameters['scope'],
+);
 
-    if (!result.canReadActivities) {
-      throw const StravaAuthException(
-        code: 'missing_activity_scope',
-        message: 'No se autorizó el permiso para leer actividades.',
-      );
-    }
+final exchangeResult = await _repository.exchangeCode(
+  authorizationCode: authorizationCode,
+);
 
-    await _tokenStore.saveSession(
-      token: result.token,
-      athlete: result.athlete,
-      grantedScopes: result.grantedScopes,
-    );
+final result = StravaAuthResult(
+  token: exchangeResult.token,
+  athlete: exchangeResult.athlete,
+  grantedScopes: grantedScopes,
+);
 
-    return result;
+if (!result.canReadActivities) {
+  throw const StravaAuthException(
+    code: 'missing_activity_scope',
+    message: 'No se autorizó el permiso para leer actividades.',
+  );
+}
+
+await _tokenStore.saveSession(
+  token: result.token,
+  athlete: result.athlete,
+  grantedScopes: result.grantedScopes,
+);
+
+return result;
   }
 
   Future<StravaToken?> getValidToken() async {
@@ -179,20 +189,34 @@ class StravaAuthService {
     }
   }
 
-  void _validateCallback(Uri callbackUri) {
-    final expectedUri = Uri.parse(StravaConfig.redirectUri);
+Set<String> _parseCallbackScopes(String? value) {
+  final text = value?.trim() ?? '';
 
-    final hasExpectedScheme = callbackUri.scheme == expectedUri.scheme;
-
-    final hasExpectedHost = callbackUri.host == expectedUri.host;
-
-    if (!hasExpectedScheme || !hasExpectedHost) {
-      throw const StravaAuthException(
-        code: 'invalid_callback',
-        message: 'La dirección de retorno de Strava no es válida.',
-      );
-    }
+  if (text.isEmpty) {
+    return <String>{};
   }
+
+  return text
+      .split(RegExp(r'[\s,]+'))
+      .map((scope) => scope.trim())
+      .where((scope) => scope.isNotEmpty)
+      .toSet();
+}
+
+ void _validateCallback(Uri callbackUri) {
+  final hasExpectedScheme =
+      callbackUri.scheme == StravaConfig.appCallbackScheme;
+
+  final hasExpectedHost =
+      callbackUri.host == StravaConfig.appCallbackHost;
+
+  if (!hasExpectedScheme || !hasExpectedHost) {
+    throw const StravaAuthException(
+      code: 'invalid_callback',
+      message: 'La dirección de retorno de Strava no es válida.',
+    );
+  }
+}
 
   String _generateState() {
     const characters =

@@ -12,7 +12,11 @@ class StravaConfig {
     'STRAVA_AUTH_BACKEND_URL',
   );
 
-  static const String redirectUri = 'http://localhost:3000/api/v1/callback';
+  static const String redirectUri = 'http://localhost:3000/api/v1/strava/callback';
+
+  static const String appCallbackScheme = 'appkm';
+
+static const String appCallbackHost = 'strava-callback';
 
   static const List<String> scopes = ['read', 'activity:read_all'];
 

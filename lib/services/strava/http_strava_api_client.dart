@@ -35,6 +35,7 @@ class HttpStravaApiClient extends StravaApiClient {
       body: {'code': code, 'redirect_uri': StravaConfig.redirectUri},
     );
 
+
     return StravaAuthResult.fromJson(response);
   }
 
